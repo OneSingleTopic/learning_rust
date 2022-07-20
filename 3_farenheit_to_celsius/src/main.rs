@@ -20,7 +20,6 @@ fn main() {
             continue;
         }
 
-
         println!("Input temperature :");
 
         io::stdin()

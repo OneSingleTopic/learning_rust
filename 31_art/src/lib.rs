@@ -8,25 +8,43 @@ pub mod kinds {
     /// # Color
     ///
     /// Gathering trait
-    pub trait Color: std::fmt::Debug {}
+    pub trait Color {
+        fn to_str(&self) -> &str;
+    }
 
     /// # Primary color enum
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug)]
     pub enum PrimaryColor {
         Red,
         Yellow,
         Blue,
     }
-    impl Color for PrimaryColor {}
+    impl Color for PrimaryColor {
+        fn to_str(&self) -> &str {
+            match self {
+                PrimaryColor::Red => "Red",
+                PrimaryColor::Yellow => "Yellow",
+                PrimaryColor::Blue => "Blue",
+            }
+        }
+    }
 
     /// # Secondary color enum
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug)]
     pub enum SecondaryColor {
         Orange,
         Purple,
         Green,
     }
-    impl Color for SecondaryColor {}
+    impl Color for SecondaryColor {
+        fn to_str(&self) -> &str {
+            match self {
+                SecondaryColor::Orange => "Orange",
+                SecondaryColor::Purple => "Purple",
+                SecondaryColor::Green => "Green",
+            }
+        }
+    }
 }
 /// # Utils
 ///
@@ -58,21 +76,21 @@ pub mod utils {
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//     #[test]
-//     fn test() {
-//         use kinds::{Color, PrimaryColor, SecondaryColor};
-//         use utils;
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test() {
+        use kinds::{PrimaryColor, SecondaryColor};
+        use utils;
 
-//         assert_eq!(
-//             *utils::mix(PrimaryColor::Red, PrimaryColor::Blue),
-//             SecondaryColor::Purple
-//         );
-//         assert_eq!(
-//             *utils::mix(PrimaryColor::Blue, PrimaryColor::Blue),
-//             PrimaryColor::Red
-//         );
-//     }
-// }
+        assert_eq!(
+            utils::mix(PrimaryColor::Red, PrimaryColor::Blue).to_str(),
+            SecondaryColor::Purple.to_str()
+        );
+        assert_eq!(
+            utils::mix(PrimaryColor::Blue, PrimaryColor::Blue).to_str(),
+            PrimaryColor::Red.to_str(),
+        );
+    }
+}

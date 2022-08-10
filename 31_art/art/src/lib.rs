@@ -1,61 +1,40 @@
-pub use self::kinds::{Color, PrimaryColor, SecondaryColor};
+pub use self::kinds::{NamedColor, PrimaryColor, SecondaryColor};
 pub use self::utils::mix;
 
 /// # Kinds
 ///
 /// Contains Kind of colors
 pub mod kinds {
-    /// # Color
-    ///
-    /// Gathering trait
-    pub trait Color {
-        fn to_str(&self) -> &str;
-    }
+    pub use named_color::NamedColor;
+    use named_color_derive::NamedColor;
 
     /// # Primary color enum
-    #[derive(Debug)]
+    #[derive(Debug, NamedColor)]
     pub enum PrimaryColor {
         Red,
         Yellow,
         Blue,
     }
-    impl Color for PrimaryColor {
-        fn to_str(&self) -> &str {
-            match self {
-                PrimaryColor::Red => "Red",
-                PrimaryColor::Yellow => "Yellow",
-                PrimaryColor::Blue => "Blue",
-            }
-        }
-    }
 
     /// # Secondary color enum
-    #[derive(Debug)]
+    #[derive(Debug, NamedColor)]
     pub enum SecondaryColor {
         Orange,
         Purple,
+        Brown,
         Green,
-    }
-    impl Color for SecondaryColor {
-        fn to_str(&self) -> &str {
-            match self {
-                SecondaryColor::Orange => "Orange",
-                SecondaryColor::Purple => "Purple",
-                SecondaryColor::Green => "Green",
-            }
-        }
     }
 }
 /// # Utils
 ///
 /// Contains method to use colors
 pub mod utils {
-    use crate::kinds::{Color, PrimaryColor, SecondaryColor};
+    use crate::kinds::{NamedColor, PrimaryColor, SecondaryColor};
     /// # Mix
     ///
     /// Mix color together
     ///
-    pub fn mix(color_left: PrimaryColor, color_right: PrimaryColor) -> Box<dyn Color> {
+    pub fn mix(color_left: PrimaryColor, color_right: PrimaryColor) -> Box<dyn NamedColor> {
         match color_left {
             PrimaryColor::Red => match color_right {
                 PrimaryColor::Yellow => Box::new(SecondaryColor::Orange),
@@ -85,12 +64,16 @@ mod tests {
         use utils;
 
         assert_eq!(
-            utils::mix(PrimaryColor::Red, PrimaryColor::Blue).to_str(),
-            SecondaryColor::Purple.to_str()
+            utils::mix(PrimaryColor::Red, PrimaryColor::Blue).name(),
+            SecondaryColor::Purple.name()
         );
         assert_eq!(
-            utils::mix(PrimaryColor::Blue, PrimaryColor::Blue).to_str(),
-            PrimaryColor::Red.to_str(),
+            utils::mix(PrimaryColor::Blue, PrimaryColor::Blue).name(),
+            PrimaryColor::Blue.name(),
+        );
+        assert_ne!(
+            utils::mix(PrimaryColor::Blue, PrimaryColor::Blue).name(),
+            PrimaryColor::Red.name(),
         );
     }
 }

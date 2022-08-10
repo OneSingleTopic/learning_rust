@@ -1,0 +1,10 @@
+[package]
+name = "art"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+named_color = {path = "../named_color"}
+named_color_derive = {path = "../named_color/named_color_derive"}

@@ -1,27 +1,63 @@
 use my_server::ThreadPool;
+
 use std::fs;
+use std::io;
 use std::io::prelude::*;
 use std::net::TcpListener;
 use std::net::TcpStream;
 use std::process;
+use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
 
+enum HostMessage {
+    Exit,
+}
 fn main() {
-    let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
+    let mut listener = TcpListener::bind("127.0.0.1:7878").unwrap();
+    listener.set_nonblocking(true);
 
-    match ThreadPool::new(4) {
-        Ok(pool) => {
-            for stream in listener.incoming() {
-                let mut stream = stream.unwrap();
+    let (sending_channel, receiving_channel): (
+        mpsc::Sender<HostMessage>,
+        mpsc::Receiver<HostMessage>,
+    ) = mpsc::channel();
 
-                pool.execute(Box::new(|| handle_connection(stream)));
+    let handle = thread::spawn(move || match ThreadPool::new(4) {
+        Ok(pool) => loop {
+            if let Ok(_) = receiving_channel.try_recv() {
+                println!("STOP Listening");
+                break;
             }
-        }
+
+            if let Some(Ok(stream)) = listener.incoming().next() {
+                println!("New request");
+                pool.execute(Box::new(|| handle_connection(stream)));
+            };
+        },
+
         Err(err) => {
             eprintln!("Problem creating the pool: {err}");
             process::exit(1);
         }
+    });
+
+    loop {
+        println!("Shutdown ?");
+
+        let mut input = String::new();
+
+        io::stdin()
+            .read_line(&mut input)
+            .expect("Failed to read input");
+
+        match input.trim() {
+            "" => {
+                sending_channel.send(HostMessage::Exit).unwrap();
+                handle.join().unwrap();
+                process::exit(0);
+            }
+            _ => continue,
+        };
     }
 }
 
@@ -34,7 +70,7 @@ fn handle_connection(mut stream: TcpStream) {
     let (status, finename) = if buffer.starts_with(get) {
         ("HTTP/1.1 200 OK/r/n/r/n", "index.html")
     } else if buffer.starts_with(sleep) {
-        thread::sleep(Duration::from_secs(3));
+        thread::sleep(Duration::from_secs(10));
         ("HTTP/1.1 200 OK/r/n/r/n", "index.html")
     } else {
         ("HTTP/1.1 404 NOT FOUND/r/n/r/n", "404.html")
